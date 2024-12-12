@@ -10,9 +10,9 @@ import java.util.*;
 
 public class User {
     public UserInterface userInterface = new UserInterface() {
-        private final Scanner sc = new Scanner(System.in);
-        ArrayList<UserInfo> users = new ArrayList<>();
-        private final Random rand = new Random();
+        private final Scanner scanner = new Scanner(System.in);
+        private final ArrayList<UserInfo> users = new ArrayList<>();
+        private final Random random = new Random();
 
         @Override
         public void addFile() {
@@ -23,25 +23,20 @@ public class User {
             File file = new File(filePath);
 
             try {
-
-                if (!directory.exists()) {
-                    if (directory.mkdirs()) {
-                        System.out.println("Directory created: " + directoryPath);
-                    } else {
-                        System.out.println("Failed to create directory: " + directoryPath);
-                    }
+                if (!directory.exists() && directory.mkdirs()) {
+                    System.out.println("Directory created: " + directoryPath);
+                } else if (!directory.exists()) {
+                    System.out.println("Failed to create directory: " + directoryPath);
                 }
 
-                if (!file.exists()) {
-                    if (file.createNewFile()) {
-                        System.out.println("File created: " + filePath);
-                        try (Writer writer = new FileWriter(file)) {
-                            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                            gson.toJson(new ArrayList<>(), writer);
-                        }
-                    } else {
-                        System.out.println("Failed to create file: " + filePath);
+                if (!file.exists() && file.createNewFile()) {
+                    System.out.println("File created: " + filePath);
+                    try (Writer writer = new FileWriter(file)) {
+                        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                        gson.toJson(new ArrayList<>(), writer);
                     }
+                } else if (!file.exists()) {
+                    System.out.println("Failed to create file: " + filePath);
                 }
             } catch (IOException e) {
                 System.out.println("Error during file creation: " + e.getMessage());
@@ -57,67 +52,57 @@ public class User {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String filePath = "./DB/users.json";
             File file = new File(filePath);
+
             if (file.exists()) {
                 try (Reader reader = new FileReader(file)) {
-                    Type userArrayListType = new TypeToken<ArrayList<UserInfo>>() {
-                    }.getType();
-                    users = gson.fromJson(reader, userArrayListType);
+                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {}.getType();
+                    users.clear();
+                    users.addAll(gson.fromJson(reader, userListType));
                 } catch (IOException e) {
                     System.out.println("Error reading users file: " + e.getMessage());
                 }
             }
-            System.out.println("To add a new user please enter your name: ");
-            String name = sc.nextLine();
-            if (name.isBlank()) name = "No name";
 
-            System.out.println("Your surname: ");
-            String surname = sc.nextLine();
-            if (surname.isBlank()) surname = "No Surname";
+            System.out.print("Enter your name: ");
+            String name = scanner.nextLine().trim();
+            if (name.isEmpty()) name = "No name";
 
-            System.out.println("Your username: ");
-            String username = sc.nextLine();
-            if (username.isBlank()) username = "User " + (users.size() + 1);
+            System.out.print("Enter your surname: ");
+            String surname = scanner.nextLine().trim();
+            if (surname.isEmpty()) surname = "No Surname";
 
-            System.out.println("Your password: ");
-            String password = sc.nextLine();
-            if (password.isBlank()) password = String.valueOf(UUID.randomUUID());
+            System.out.print("Enter your username: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) username = "User " + (users.size() + 1);
+
+            System.out.print("Enter your password: ");
+            String password = scanner.nextLine().trim();
+            if (password.isEmpty()) password = UUID.randomUUID().toString();
 
             int age;
             while (true) {
-                System.out.println("Your age: ");
-                String ageInput = sc.nextLine();
-                if (ageInput.isBlank()) ageInput = String.valueOf(rand.nextInt(10, 50));
+                System.out.print("Enter your age: ");
+                String ageInput = scanner.nextLine().trim();
+                if (ageInput.isEmpty()) ageInput = String.valueOf(random.nextInt(40) + 10);
                 try {
                     age = Integer.parseInt(ageInput);
                     if (age < 10 || age > 100) {
                         System.out.println("Please enter a valid age between 10 and 100.");
-                        continue;
+                    } else {
+                        break;
                     }
-                    break;
                 } catch (NumberFormatException e) {
                     System.out.println("Please enter a valid number for age!");
                 }
             }
 
-            UserInfo newUser = new UserInfo(name, surname, username, password, age, 0, String.valueOf(UUID.randomUUID()));
+            UserInfo newUser = new UserInfo(name, surname, username, password, age, 0, UUID.randomUUID().toString());
 
-
-            boolean doesUserExist = users.stream().anyMatch(userInfo ->
-                    Objects.equals(userInfo.getId(), newUser.getId()) ||
-                            Objects.equals(userInfo.getUsername(), newUser.getUsername())
-            );
-
-            if (doesUserExist) {
+            if (users.stream().anyMatch(user -> user.getId().equals(newUser.getId()) || user.getUsername().equals(newUser.getUsername()))) {
                 System.out.println("User already exists!");
             } else {
                 users.add(newUser);
-
-                try (Writer writer = new FileWriter(file)) {
-                    gson.toJson(users, writer);
-                } catch (IOException e) {
-                    System.out.println("Error saving users: " + e.getMessage());
-                }
-
+                saveUsersToFile(file, gson);
                 System.out.println("User added!");
             }
         }
@@ -128,161 +113,99 @@ public class User {
             String filePath = "./DB/users.json";
             File file = new File(filePath);
 
-            try {
-                if (file.exists()) {
-                    try (Reader reader = new FileReader(file)) {
-                        Type userArrayListType = new TypeToken<ArrayList<UserInfo>>() {
-                        }.getType();
-                        users = gson.fromJson(reader, userArrayListType);
+            if (file.exists()) {
+                try (Reader reader = new FileReader(file)) {
+                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {}.getType();
+                    users.clear();
+                    users.addAll(gson.fromJson(reader, userListType));
 
-                        if (users.isEmpty()) {
-                            System.out.println("No users found.");
-                        } else {
-                            for (int i = 0; i < users.size(); i++) {
-                                System.out.println((i + 1) + ". Name: " + users.get(i).getUsername()
-                                        + ". Surname: " + users.get(i).getSurname()
-                                        + ". Username: " + users.get(i).getUsername()
-                                        + ". Password: " + users.get(i).getPassword()
-                                        + ". Age: " + users.get(i).getAge()
-                                        + ". Balance $" + users.get(i).getBalance()
-                                        + ". ID: " + users.get(i).getId());
-                            }
+                    if (users.isEmpty()) {
+                        System.out.println("No users found.");
+                    } else {
+                        for (int i = 0; i < users.size(); i++) {
+                            UserInfo user = users.get(i);
+                            System.out.printf("%d. Name: %s, Surname: %s, Username: %s, Password: %s, Age: %d, Balance: $%.2f, ID: %s%n",
+                                    i + 1, user.getName(), user.getSurname(), user.getUsername(), user.getPassword(),
+                                    user.getAge(), user.getBalance(), user.getId());
                         }
                     }
-                } else {
-                    System.out.println("No users file found.");
+                } catch (IOException e) {
+                    System.out.println("Error reading users file: " + e.getMessage());
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } else {
+                System.out.println("No users file found.");
             }
         }
 
         @Override
         public void deposit() {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String filePath = "./DB/users.json";
-            File file = new File(filePath);
-
-            try {
-                if (file.exists()) {
-                    try (Reader reader = new FileReader(file)) {
-                        Type userArrayListType = new TypeToken<ArrayList<UserInfo>>() {
-                        }.getType();
-                        users = gson.fromJson(reader, userArrayListType);
-
-                        if (users.isEmpty()) {
-                            System.out.println("No users found.");
-                        } else {
-                            System.out.println("Enter the user id: ");
-                            String id = sc.nextLine();
-
-                            int depositAmount;
-                            for (UserInfo user : users) {
-                                if (user.getId().equals(id)) {
-                                    System.out.println("Enter the amount of money you want to deposit: ");
-                                    while (true) {
-                                        String depositInput = sc.nextLine();
-                                        if (depositInput.isBlank()) depositInput = "5";
-                                        try {
-                                            depositAmount = Integer.parseInt(depositInput);
-                                            break;
-                                        } catch (NumberFormatException e) {
-                                            System.out.println("Please enter a number!");
-                                        }
-                                    }
-
-                                    user.setBalance(user.getBalance() + depositAmount);
-                                }
-                            }
-
-                            System.out.println("Funds were successfully deposited!");
-                        }
-                    }
-                } else {
-                    System.out.println("No users file found.");
-                }
-
-                try (Writer writer = new FileWriter(file)) {
-                    gson.toJson(users, writer);
-                } catch (IOException e) {
-                    System.out.println("Error saving users: " + e.getMessage());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            processTransaction("deposit");
         }
 
         @Override
         public void withdraw() {
+            processTransaction("withdraw");
+        }
+
+        private void processTransaction(String transactionType) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String filePath = "./DB/users.json";
             File file = new File(filePath);
 
-            try {
-                if (file.exists()) {
-                    try (Reader reader = new FileReader(file)) {
-                        Type userArrayListType = new TypeToken<ArrayList<UserInfo>>() {
-                        }.getType();
-                        users = gson.fromJson(reader, userArrayListType);
+            if (file.exists()) {
+                try (Reader reader = new FileReader(file)) {
+                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {}.getType();
+                    users.clear();
+                    users.addAll(gson.fromJson(reader, userListType));
 
-                        if (users.isEmpty()) {
-                            System.out.println("No users found.");
-                        } else {
-                            boolean isFound = true;
-                            boolean isAmountTrue = true;
-                            System.out.println("Enter the user id: ");
-                            String id = sc.nextLine();
+                    if (users.isEmpty()) {
+                        System.out.println("No users found.");
+                        return;
+                    }
 
-                            int withdrawAmount;
-                            for (UserInfo user : users) {
-                                if (user.getId().equals(id)) {
-                                    System.out.println("Enter the amount of money you want to withdraw: ");
-                                    while (true) {
-                                        String withdrawInput = sc.nextLine();
-                                        if (withdrawInput.isBlank()) withdrawInput = "5";
-                                        try {
-                                            withdrawAmount = Integer.parseInt(withdrawInput);
-                                            break;
-                                        } catch (NumberFormatException e) {
-                                            System.out.println("Please enter a number!");
-                                        }
-                                    }
+                    System.out.print("Enter the user ID: ");
+                    String id = scanner.nextLine().trim();
 
-                                    if (user.getBalance() > withdrawAmount) {
-                                        user.setBalance(user.getBalance() - withdrawAmount);
-                                    } else {
-                                        isAmountTrue = false;
-                                        break;
-                                    }
+                    UserInfo user = users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
 
-                                    isFound = true;
-                                    break;
+                    if (user == null) {
+                        System.out.println("User not found.");
+                        return;
+                    }
 
-                                } else {
-                                    isFound = false;
-                                }
-                            }
-
-                            if (!isFound || !isAmountTrue) {
-                                System.out.println("User is not found or Withdrawing amount is too big!!");
-                            }
-
-                            if (isFound && isAmountTrue) {
-                                System.out.println("Funds were successfully withdrawn!");
-                            }
+                    System.out.printf("Enter the amount to %s: ", transactionType);
+                    int amount;
+                    while (true) {
+                        String input = scanner.nextLine().trim();
+                        if (input.isEmpty()) input = "5";
+                        try {
+                            amount = Integer.parseInt(input);
+                            break;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Please enter a valid number!");
                         }
                     }
-                } else {
-                    System.out.println("No users file found.");
-                }
 
-                try (Writer writer = new FileWriter(file)) {
-                    gson.toJson(users, writer);
+                    if ("withdraw".equals(transactionType) && user.getBalance() < amount) {
+                        System.out.println("Insufficient balance!");
+                    } else {
+                        user.setBalance(user.getBalance() + ("deposit".equals(transactionType) ? amount : -amount));
+                        System.out.printf("Transaction successful! New balance: $%.2f%n", user.getBalance());
+                        saveUsersToFile(file, gson);
+                    }
                 } catch (IOException e) {
-                    System.out.println("Error saving users: " + e.getMessage());
+                    System.out.println("Error reading users file: " + e.getMessage());
                 }
+            } else {
+                System.out.println("No users file found.");
+            }
+        }
+
+        private void saveUsersToFile(File file, Gson gson) {
+            try (Writer writer = new FileWriter(file)) {
+                gson.toJson(users, writer);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Error saving users: " + e.getMessage());
             }
         }
     };
