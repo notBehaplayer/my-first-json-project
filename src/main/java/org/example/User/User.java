@@ -24,13 +24,10 @@ public class User {
 
             try {
                 if (!directory.exists() && directory.mkdirs()) {
-                    System.out.println("Directory created: " + directoryPath);
                 } else if (!directory.exists()) {
-                    System.out.println("Failed to create directory: " + directoryPath);
                 }
 
                 if (!file.exists() && file.createNewFile()) {
-                    System.out.println("File created: " + filePath);
                     try (Writer writer = new FileWriter(file)) {
                         Gson gson = new GsonBuilder().setPrettyPrinting().create();
                         gson.toJson(new ArrayList<>(), writer);
@@ -55,7 +52,8 @@ public class User {
 
             if (file.exists()) {
                 try (Reader reader = new FileReader(file)) {
-                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {}.getType();
+                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {
+                    }.getType();
                     users.clear();
                     users.addAll(gson.fromJson(reader, userListType));
                 } catch (IOException e) {
@@ -108,6 +106,46 @@ public class User {
         }
 
         @Override
+        public void removeUser() {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String filePath = "./DB/users.json";
+            File file = new File(filePath);
+
+            if (file.exists()) {
+                try (Reader reader = new FileReader(file)) {
+                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {
+                    }.getType();
+                    users.clear();
+                    users.addAll(gson.fromJson(reader, userListType));
+                } catch (IOException e) {
+                    System.out.println("Error reading users file: " + e.getMessage());
+                }
+            }
+
+            if (users.isEmpty()) {
+                System.out.println("No users found.");
+            } else {
+                boolean isUserFound = false;
+                System.out.println("To remove user please enter his id: ");
+                String id = scanner.nextLine();
+
+                for (int i = 0; i < users.size(); i++) {
+                    if (users.get(i).getId().equals(id)) {
+                        users.remove(i);
+                        saveUsersToFile(file, gson);
+                        System.out.println("User removed!");
+                        isUserFound = true;
+                        break;
+                    }
+                }
+
+                if (!isUserFound) {
+                    System.out.println("User not found!");
+                }
+            }
+        }
+
+        @Override
         public void showUsers() {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String filePath = "./DB/users.json";
@@ -115,7 +153,8 @@ public class User {
 
             if (file.exists()) {
                 try (Reader reader = new FileReader(file)) {
-                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {}.getType();
+                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {
+                    }.getType();
                     users.clear();
                     users.addAll(gson.fromJson(reader, userListType));
 
@@ -124,7 +163,7 @@ public class User {
                     } else {
                         for (int i = 0; i < users.size(); i++) {
                             UserInfo user = users.get(i);
-                            System.out.printf("%d. Name: %s, Surname: %s, Username: %s, Password: %s, Age: %d, Balance: $%.2f, ID: %s%n",
+                            System.out.printf("%d. Name: %s, Surname: %s, Username: %s, Password: %s, Age: %d, Balance: $%d, ID: %s%n",
                                     i + 1, user.getName(), user.getSurname(), user.getUsername(), user.getPassword(),
                                     user.getAge(), user.getBalance(), user.getId());
                         }
@@ -154,7 +193,8 @@ public class User {
 
             if (file.exists()) {
                 try (Reader reader = new FileReader(file)) {
-                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {}.getType();
+                    Type userListType = new TypeToken<ArrayList<UserInfo>>() {
+                    }.getType();
                     users.clear();
                     users.addAll(gson.fromJson(reader, userListType));
 

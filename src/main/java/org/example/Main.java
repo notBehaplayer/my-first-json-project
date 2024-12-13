@@ -17,10 +17,11 @@ public class Main {
                 System.out.print("""
                         Welcome to bank!
                         1. Add user.
-                        2. Show users.
-                        3. Deposit.
-                        4. Withdraw.
-                        5. Exit.
+                        2. Remove user.
+                        3. Show users.
+                        4. Deposit.
+                        5. Withdraw.
+                        6. Exit.
                         """);
                 String choiceInput = sc.nextLine();
                 try {
@@ -37,15 +38,18 @@ public class Main {
                     user.userInterface.addUser();
                     break;
                 case 2:
-                    user.userInterface.showUsers();
+                    user.userInterface.removeUser();
                     break;
                 case 3:
-                    user.userInterface.deposit();
+                    user.userInterface.showUsers();
                     break;
                 case 4:
-                    user.userInterface.withdraw();
+                    user.userInterface.deposit();
                     break;
                 case 5:
+                    user.userInterface.withdraw();
+                    break;
+                case 6:
                     System.out.println("Thanks for using our bank!");
                     System.exit(0);
                 default:

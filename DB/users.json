@@ -1,0 +1,29 @@
+[
+  {
+    "name": "No name",
+    "surname": "No Surname",
+    "username": "User 1",
+    "password": "37593553-2751-4ea9-b845-e9edaf02eee3",
+    "age": 30,
+    "balance": 0,
+    "id": "f427a8a3-200d-40ed-9c7a-5c744418ec3a"
+  },
+  {
+    "name": "No name",
+    "surname": "No Surname",
+    "username": "User 2",
+    "password": "530ed16e-a0af-4652-835a-b38b43352944",
+    "age": 29,
+    "balance": 0,
+    "id": "48cfb45b-bc01-4090-aef8-1eac3c3056fa"
+  },
+  {
+    "name": "No name",
+    "surname": "No Surname",
+    "username": "User 3",
+    "password": "36a7d97a-46b0-4507-8078-f4e468e52b31",
+    "age": 39,
+    "balance": 0,
+    "id": "38a75f16-cb42-4f09-b88e-9bd0ebdb8398"
+  }
+]
